@@ -1,0 +1,63 @@
+services:
+  fastapi_app:
+    build: ./app
+    container_name: fastapi-app
+    ports:
+      - "8000:8000"
+    environment:
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+    restart: unless-stopped
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./data/uptime-kuma:/app/data
+    restart: unless-stopped
+
+  prefect:
+    image: prefecthq/prefect:3-python3.12
+    container_name: prefect-server
+    command: prefect server start --host 0.0.0.0
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./flows:/opt/prefect/flows
+      - ./data/prefect:/root/.prefect
+    environment:
+      - PREFECT_HOME=/root/.prefect
+    restart: unless-stopped
+
+  ml-api:
+    build: ./ml_api
+    container_name: ml-api
+    ports:
+      - "8001:8001"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5555
+    volumes:
+      - ./ml_api/models:/app/models
+      - ./data/ml-api:/app/data
+    depends_on:
+      - mlflow
+    restart: unless-stopped
+
+  mlflow:
+    image: python:3.11-slim
+    container_name: mlflow-server
+    ports:
+      - "5555:5555"
+    working_dir: /mlflow
+    command: >
+      bash -c "
+        apt-get update && 
+        apt-get install -y build-essential procps &&
+        pip install --upgrade pip setuptools wheel &&
+        pip install mlflow[extras]==2.8.1 &&
+        mlflow server --host 0.0.0.0 --port 5555 --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns
+      "
+    volumes:
+      - ./data/mlflow:/mlflow
+    restart: unless-stopped
