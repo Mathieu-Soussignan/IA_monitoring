@@ -1,172 +1,202 @@
-from prefect import task, flow
-import random
-import requests
-import time
+"""
+Flow Prefect de détection de dérive + retrain automatique
+--------------------------------------------------------
+  le rendra visible pour le serveur/worker Prefect.
+"""
+
 from datetime import datetime
+import logging
 import os
+import random
+import sys
+import time
+
+import requests
+from prefect import flow, task, get_run_logger
+
+# --------------------------------------------------------------------------- #
+# 1. CONFIGURATION DU LOGGER
+# --------------------------------------------------------------------------- #
+ROOT_LOGGER = logging.getLogger("ml-monitor")
+ROOT_LOGGER.setLevel(logging.INFO)                       # INFO local
+handler = logging.StreamHandler(sys.stdout)              # -> stdout (docker logs)
+handler.setFormatter(
+    logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
+)
+ROOT_LOGGER.addHandler(handler)
+
+# --------------------------------------------------------------------------- #
+# 2. TÂCHES
+# --------------------------------------------------------------------------- #
+@task
+def generate_random_number() -> float:
+    """Génère un nombre aléatoire entre 0 et 1."""
+    rng = random.random()
+    get_run_logger().info(f"Nombre généré : {rng:.6f}")
+    return rng
+
 
 @task
-def generate_random_number():
-    """Génère un nombre aléatoire entre 0 et 1"""
-    number = random.random()
-    print(f"Nombre généré: {number}")
-    return number
+def check_model_drift(random_number: float, threshold: float = 0.5) -> bool:
+    """Retourne True si dérive détectée (nombre < threshold)."""
+    drift = random_number < threshold
+    get_run_logger().info(f"Dérive détectée : {drift}")
+    return drift
+
 
 @task
-def check_model_drift(random_number):
-    """Vérifie si le modèle a dérivé (simulation)"""
-    drift_threshold = 0.5
-    has_drifted = random_number < drift_threshold
-    print(f"Dérive détectée: {has_drifted}")
-    return has_drifted
-
-@task
-def send_discord_notification(message):
-    """Envoie une notification Discord"""
+def send_discord_notification(message: str) -> None:
+    """Envoie `message` sur le webhook Discord défini en variable env."""
     webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
-    if webhook_url:
-        payload = {"content": message}
-        try:
-            response = requests.post(webhook_url, json=payload)
-            print(f"Notification envoyée: {response.status_code}")
-        except Exception as e:
-            print(f"Erreur notification Discord: {e}")
+    logger = get_run_logger()
 
-@task
-def generate_ml_dataset(n_samples=1000):
-    """Génère un nouveau dataset via l'API ML"""
+    if not webhook_url:
+        logger.warning("DISCORD_WEBHOOK_URL manquant : notification ignorée.")
+        return
+
     try:
-        response = requests.post(f"http://ml-api:8001/generate?n_samples={n_samples}")
-        if response.status_code == 200:
-            result = response.json()
-            print(f"Dataset généré: {result}")
-            return result
-        else:
-            print(f"Erreur génération dataset: {response.status_code}")
-            return None
-    except Exception as e:
-        print(f"Erreur connexion API ML: {e}")
-        return None
+        resp = requests.post(webhook_url, json={"content": message}, timeout=10)
+        logger.warning(f"Notification Discord envoyée ({resp.status_code}).")
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Erreur notification Discord : {exc}")
+
 
 @task
-def trigger_real_retrain():
-    """Déclenche un vrai retrain via l'API ML"""
+def generate_ml_dataset(n_samples: int = 1000) -> dict | None:
+    """POST /generate sur ml-api pour créer un dataset."""
+    url = f"http://ml-api:8001/generate?n_samples={n_samples}"
+    logger = get_run_logger()
+
     try:
-        print("🔄 Déclenchement du retrain réel du modèle...")
-        response = requests.post("http://ml-api:8001/retrain")
-        
-        if response.status_code == 200:
-            result = response.json()
-            print(f"✅ Retrain terminé: {result}")
-            return result
-        else:
-            print(f"❌ Erreur retrain: {response.status_code}")
-            return {"error": f"HTTP {response.status_code}"}
-    except Exception as e:
-        print(f"❌ Erreur connexion retrain: {e}")
-        return {"error": str(e)}
+        resp = requests.post(url, timeout=15)
+        if resp.status_code == 200:
+            data = resp.json()
+            logger.info(f"Dataset généré : {data}")
+            return data
+        logger.error(f"Erreur génération dataset : HTTP {resp.status_code}")
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Erreur connexion API ML : {exc}")
+
+    return None
+
 
 @task
-def get_model_prediction():
-    """Obtient une prédiction du modèle"""
+def trigger_real_retrain() -> dict:
+    """POST /retrain sur ml-api ; retourne le JSON ou {'error': ...}."""
+    url = "http://ml-api:8001/retrain"
+    logger = get_run_logger()
+
     try:
-        response = requests.get("http://ml-api:8001/predict")
-        if response.status_code == 200:
-            result = response.json()
-            print(f"Prédiction obtenue: {result}")
-            return result
-        else:
-            print(f"Erreur prédiction: {response.status_code}")
-            return None
-    except Exception as e:
-        print(f"Erreur connexion prédiction: {e}")
-        return None
+        logger.warning("🔄 Déclenchement du retrain réel du modèle…")
+        resp = requests.post(url, timeout=60)
+
+        if resp.status_code == 200:
+            data = resp.json()
+            logger.warning(f"✅ Retrain terminé : {data}")
+            return data
+
+        error_msg = f"HTTP {resp.status_code}"
+        logger.error(f"❌ Erreur retrain : {error_msg}")
+        return {"error": error_msg}
+
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"❌ Erreur connexion retrain : {exc}")
+        return {"error": str(exc)}
+
 
 @task
-def simulate_legacy_retrain():
-    """Simule le retrain legacy (fallback)"""
-    print("🔄 Retrain simulé (mode legacy)...")
+def get_model_prediction() -> dict | None:
+    """GET /predict sur ml-api pour une prédiction test."""
+    url = "http://ml-api:8001/predict"
+    logger = get_run_logger()
+
+    try:
+        resp = requests.get(url, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            logger.info(f"Prédiction obtenue : {data}")
+            return data
+        logger.error(f"Erreur prédiction : HTTP {resp.status_code}")
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Erreur connexion prédiction : {exc}")
+
+    return None
+
+
+@task
+def simulate_legacy_retrain() -> str:
+    """Fallback simple quand l’API ML est indisponible."""
+    logger = get_run_logger()
+    logger.warning("🔄 Retrain simulé (mode legacy)…")
     time.sleep(2)
-    print("✅ Retrain simulé terminé")
+    logger.warning("✅ Retrain simulé terminé")
     return "Retrain simulated"
 
+
+# --------------------------------------------------------------------------- #
+# 3. FLOW PRINCIPAL
+# --------------------------------------------------------------------------- #
 @flow(name="random-check-flow")
-def random_check_flow():
-    """Flow principal de vérification avec vraie API ML"""
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    # Générer un nombre aléatoire pour simulation de dérive
-    random_num = generate_random_number()
-    
-    # Vérifier la dérive
-    drift_detected = check_model_drift(random_num)
-    
-    if drift_detected:
-        # DÉRIVE DÉTECTÉE - Action corrective
-        print("🚨 Dérive détectée - Actions correctives en cours...")
-        
-        # 1. Générer un nouveau dataset
-        dataset_result = generate_ml_dataset(1500)  # Plus d'échantillons en cas de dérive
-        
-        # 2. Déclencher le retrain réel
-        retrain_result = trigger_real_retrain()
-        
-        # 3. Obtenir une prédiction test
-        prediction_result = get_model_prediction()
-        
-        # 4. Construire le message Discord enrichi
-        if retrain_result and "error" not in retrain_result:
-            train_acc = retrain_result.get("train_accuracy", 0)
-            test_acc = retrain_result.get("test_accuracy", 0)
-            mlflow_run = retrain_result.get("mlflow_run_id", "N/A")
-            
-            # Message de succès avec métriques
-            message = f"""🚨 **DÉRIVE DÉTECTÉE - RETRAIN AUTOMATIQUE**
-📅 {timestamp}
-🎲 Dérive simulée: {random_num:.3f} < 0.5
+def random_check_flow() -> None:
+    """Vérifie la dérive et orchestre retrain + notifications Discord."""
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    logger = get_run_logger()
 
-✅ **Retrain terminé avec succès:**
-📊 Précision train: {train_acc:.2%}
-📈 Précision test: {test_acc:.2%}
-🔬 MLflow run: `{mlflow_run[:8]}...`
+    # Étape 1 : dérive ?
+    rnd = generate_random_number()
+    drift = check_model_drift(rnd)
 
-📦 Dataset: {dataset_result.get('samples_generated', 'N/A')} échantillons
-🔮 Nouvelle prédiction: {prediction_result.get('prediction', 'N/A')} (confiance: {prediction_result.get('confidence', 0):.1%})"""
-            
+    if drift:
+        logger.warning("🚨 Dérive détectée — actions correctives en cours…")
+
+        dataset = generate_ml_dataset(1500)
+        retrain = trigger_real_retrain()
+        prediction = get_model_prediction()
+
+        if retrain and "error" not in retrain:
+            # Retrain réussi → notification SUCCESS
+            msg = (
+                "🚨 **DÉRIVE DÉTECTÉE – RETRAIN AUTOMATIQUE**\n"
+                f"📅 {ts}\n"
+                f"🎲 Dérive simulée : {rnd:.3f} < 0.5\n\n"
+                "✅ **Retrain terminé avec succès :**\n"
+                f"📊 Précision train : {retrain.get('train_accuracy', 0):.2%}\n"
+                f"📈 Précision test : {retrain.get('test_accuracy', 0):.2%}\n"
+                f"🔬 MLflow run : `{retrain.get('mlflow_run_id', '')[:8]}...`\n\n"
+                f"📦 Dataset : {dataset.get('samples_generated') if dataset else 'N/A'} échantillons\n"
+                f"🔮 Nouvelle prédiction : {prediction.get('prediction') if prediction else 'N/A'} "
+                f"(confiance : {prediction.get('confidence', 0):.1%})"
+            )
         else:
-            # Fallback en cas d'erreur API
+            # Échec API → retrain legacy + notification FAILOVER
             simulate_legacy_retrain()
-            error_msg = retrain_result.get("error", "Erreur inconnue") if retrain_result else "API indisponible"
-            message = f"""⚠️ **DÉRIVE DÉTECTÉE - RETRAIN EN MODE DÉGRADÉ**
-📅 {timestamp}
-🎲 Dérive simulée: {random_num:.3f} < 0.5
+            err = retrain.get("error", "API indisponible") if retrain else "API indisponible"
 
-❌ Erreur API ML: {error_msg}
-🔄 Retrain simulé effectué en fallback"""
-        
-        send_discord_notification(message)
-        
+            msg = (
+                "⚠️ **DÉRIVE DÉTECTÉE – RETRAIN EN MODE DÉGRADÉ**\n"
+                f"📅 {ts}\n"
+                f"🎲 Dérive simulée : {rnd:.3f} < 0.5\n\n"
+                f"❌ Erreur API ML : {err}\n"
+                "🔄 Retrain simulé effectué en fallback"
+            )
+
+        send_discord_notification(msg)
+
     else:
-        # MODÈLE STABLE - Surveillance continue
-        
-        # Obtenir quand même une prédiction pour monitoring
-        prediction_result = get_model_prediction()
-        
-        # Message de stabilité
-        if prediction_result:
-            message = f"""✅ **Modèle stable**
-📅 {timestamp}
-🎲 Valeur: {random_num:.3f} ≥ 0.5
+        # Pas de dérive – monitoring simple
+        prediction = get_model_prediction()
 
-🔮 Prédiction: {prediction_result.get('prediction', 'N/A')} (confiance: {prediction_result.get('confidence', 0):.1%})
-📊 Surveillance continue active"""
-        else:
-            message = f"""✅ **Modèle stable**
-📅 {timestamp}
-🎲 Valeur: {random_num:.3f} ≥ 0.5
-📊 Surveillance continue active"""
-        
-        send_discord_notification(message)
+        msg = (
+            "✅ **Modèle stable**\n"
+            f"📅 {ts}\n"
+            f"🎲 Valeur : {rnd:.3f} ≥ 0.5\n\n"
+            f"🔮 Prédiction : {prediction.get('prediction') if prediction else 'N/A'} "
+            f"(confiance : {prediction.get('confidence', 0):.1%})\n"
+            "📊 Surveillance continue active"
+        )
+
+        send_discord_notification(msg)
+
 
 if __name__ == "__main__":
     random_check_flow()
