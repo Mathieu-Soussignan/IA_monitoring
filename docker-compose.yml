@@ -1,11 +1,13 @@
+version: "3.8"
+
 services:
   fastapi_app:
     build: ./app
     container_name: fastapi-app
     ports:
       - "8000:8000"
-    environment:
-      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+    env_file:
+      - .env
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -15,7 +17,6 @@ services:
     restart: unless-stopped
     networks:
       - mlops-network
-    # Label retiré pour éviter le spam
 
   uptime-kuma:
     image: louislam/uptime-kuma:latest
@@ -34,23 +35,23 @@ services:
     command: prefect server start --host 0.0.0.0
     ports:
       - "4200:4200"
+    env_file:
+      - .env
     volumes:
       - ./flows:/opt/prefect/flows
       - ./data/prefect:/root/.prefect
     environment:
       - PREFECT_HOME=/root/.prefect
       - PREFECT_API_DATABASE_CONNECTION_URL=sqlite+aiosqlite:////root/.prefect/prefect.db
-      - PREFECT_API_URL=http://prefect-server:4200/api
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4200/api/health"]
       interval: 30s
-      timeout: 10s
+      timeout: 60s
       retries: 3
       start_period: 45s
     restart: unless-stopped
     networks:
       - mlops-network
-    # Label retiré - les notifications Prefect viennent déjà du workflow
 
   prefect-worker:
     image: prefecthq/prefect:3-python3.12
@@ -62,8 +63,8 @@ services:
         prefect work-pool create --type process default-pool --overwrite &&
         prefect worker start --pool default-pool --name ml-worker-docker
       "
-    environment:
-      - PREFECT_API_URL=http://prefect-server:4200/api
+    env_file:
+      - .env
     volumes:
       - ./flows:/opt/prefect/flows
     depends_on:
@@ -72,7 +73,6 @@ services:
     restart: unless-stopped
     networks:
       - mlops-network
-    # Label retiré pour éviter la duplication avec le workflow
 
   ml-api:
     build: ./ml_api
@@ -87,6 +87,8 @@ services:
     depends_on:
       mlflow:
         condition: service_healthy
+      prefect:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
@@ -97,7 +99,7 @@ services:
     networks:
       - mlops-network
     labels:
-      - "discord-logger.enabled=true"  # Garde uniquement pour les erreurs critiques ML
+      - "discord-logger.enabled=true"
 
   mlflow:
     image: python:3.11-slim
@@ -124,19 +126,19 @@ services:
     restart: unless-stopped
     networks:
       - mlops-network
-    # Label retiré - MLflow est verbeux
 
   docker-discord-logger:
     image: ghcr.io/1randomdev/docker-discord-logger:latest
     container_name: docker-discord-logger
+    env_file:
+      - .env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      - WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
-      - LOG_LEVEL=ERROR  # Seulement les erreurs
+      - LOG_LEVEL=ERROR
       - FILTER_INCLUDE_LABEL=discord-logger.enabled=true
-      - FILTER_EXCLUDE_PATTERN=health|ping|GET|POST  # Exclure le bruit
-      - RATE_LIMIT=true  # Limiter la fréquence
+      - FILTER_EXCLUDE_PATTERN=health|ping|GET|POST
+      - RATE_LIMIT=true
     restart: unless-stopped
     networks:
       - mlops-network
