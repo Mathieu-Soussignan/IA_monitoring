@@ -1,0 +1,34 @@
+20:26:16.564 | INFO    | prefect - Starting temporary server on http://127.0.0.1:8477
+See https://docs.prefect.io/3.0/manage/self-host#self-host-a-prefect-server for more information on running a dedicated Prefect server.
+20:26:19.081 | WARNING | prefect.server.utilities.postgres_listener - Cannot create Postgres LISTEN connection: PREFECT_API_DATABASE_CONNECTION_URL is not a PostgreSQL connection URL (driver: sqlite+aiosqlite).
+Discovered type 'process' for work pool 'default-pool'.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/site-packages/prefect/cli/_utilities.py", line 44, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/prefect/cli/_types.py", line 156, in sync_fn
+    return asyncio.run(async_fn(*args, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/prefect/cli/worker.py", line 169, in start
+    await worker.start(
+  File "/usr/local/lib/python3.12/site-packages/prefect/workers/process.py", line 154, in start
+    async with self as worker:
+               ^^^^
+  File "/usr/local/lib/python3.12/site-packages/prefect/workers/process.py", line 292, in __aenter__
+    await super().__aenter__()
+  File "/usr/local/lib/python3.12/site-packages/prefect/workers/base.py", line 1566, in __aenter__
+    await self.setup()
+  File "/usr/local/lib/python3.12/site-packages/prefect/workers/base.py", line 924, in setup
+    raise ValueError("`PREFECT_API_URL` must be set to start a Worker.")
+ValueError: `PREFECT_API_URL` must be set to start a Worker.
+An exception occurred.
+20:26:19.302 | INFO    | prefect - Stopping temporary server on http://127.0.0.1:8477

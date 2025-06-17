@@ -1,0 +1,5 @@
+active = "ephemeral"
+
+[profiles.ephemeral]
+PREFECT_SERVER_ALLOW_EPHEMERAL_MODE = "true"
+PREFECT_API_URL = "http://prefect-server:4200/api"
