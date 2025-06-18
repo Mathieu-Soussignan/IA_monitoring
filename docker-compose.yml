@@ -149,6 +149,13 @@ services:
     ports: ["9100:9100"]     
     restart: unless-stopped
     networks: [mlops-network]
+  
+  ui:
+    build: ./ui
+    container_name: streamlit-ui
+    env_file: .env
+    ports: ["8501:8501"]
+    networks: [mlops-network]
 
 networks:
   mlops-network:
