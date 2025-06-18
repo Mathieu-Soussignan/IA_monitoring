@@ -68,6 +68,7 @@ services:
     volumes:
       - ./ml_api/models:/app/models
       - ./data/ml-api:/app/data
+      - ./logs:/app/logs 
     depends_on:
       mlflow:
         condition: service_healthy

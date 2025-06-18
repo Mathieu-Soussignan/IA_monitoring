@@ -1,17 +1,32 @@
 from fastapi import FastAPI, HTTPException
+from prometheus_client import Gauge, generate_latest, CONTENT_TYPE_LATEST
+from fastapi.responses import Response
 from pydantic import BaseModel
+from loguru import logger
 import mlflow
 import mlflow.sklearn
 from datetime import datetime
 import numpy as np
+import sys
 import os
 
 from database import DatasetManager
 from ml_models import MLModelManager
 from prometheus_fastapi_instrumentator import Instrumentator
 
+logger.remove()
+logger.add(sys.stdout, level="INFO", format="{time} | {level} | {message}")
+
+LOG_DIR = "logs"
+os.makedirs(LOG_DIR, exist_ok=True)
+logger.add(f"{LOG_DIR}/ml_api.log", rotation="10 MB", retention="7 days", level="DEBUG")
+
 app = FastAPI(title="ML API - Jour 2", version="2.0.0")
 Instrumentator().instrument(app).expose(app)
+
+TRAIN_ACCURACY = Gauge("model_train_accuracy", "Training accuracy of the model")
+TEST_ACCURACY = Gauge("model_test_accuracy", "Test accuracy of the model")
+DATASET_SIZE = Gauge("dataset_size", "Number of samples in training dataset")
 
 # Instances globales
 dataset_manager = DatasetManager()
@@ -118,62 +133,73 @@ def retrain_model_debug():
 @app.post("/retrain", response_model=RetrainResponse)
 def retrain_model():
     """Réentraîne le modèle avec MLflow (version robuste)"""
+    logger.info("🔁 Starting retraining process...")
+
     X, y = dataset_manager.get_latest_dataset()
     
     if X is None:
+        logger.warning("⚠️ Aucun dataset trouvé pour l'entraînement.")
         raise HTTPException(status_code=404, detail="Aucun dataset pour l'entraînement")
     
-    # Configuration MLflow
     MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://mlflow:5555")
     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
     
     try:
         experiment_name = "ml-api-retraining"
-        
-        # Créer ou récupérer l'expériment
+
         try:
             experiment_id = mlflow.create_experiment(experiment_name)
+            logger.info(f"🧪 Création d'un nouvel expériment MLflow: {experiment_name}")
         except Exception:
             experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
+            logger.info(f"📁 Expériment existant utilisé: {experiment_name}")
         
         mlflow.set_experiment(experiment_name)
         
         with mlflow.start_run() as run:
-            # Entraînement
+            logger.info("Début du run MLflow")
+
             metrics = model_manager.train_model(X.values, y.values)
-            
-            # Logging MLflow (paramètres et métriques)
+
+            TRAIN_ACCURACY.set(float(metrics["train_accuracy"]))
+            TEST_ACCURACY.set(float(metrics["test_accuracy"]))
+            DATASET_SIZE.set(len(X))
+
             mlflow.log_param("n_samples", len(X))
             mlflow.log_param("n_features", X.shape[1])
             mlflow.log_param("algorithm", "LogisticRegression")
-            
+
             mlflow.log_metric("train_accuracy", float(metrics["train_accuracy"]))
             mlflow.log_metric("test_accuracy", float(metrics["test_accuracy"]))
-            
-            # Log du modèle (version sécurisée avec try/catch)
+
+            logger.info(f"📊 Accuracy train: {metrics['train_accuracy']:.4f}, test: {metrics['test_accuracy']:.4f}")
+
             try:
                 mlflow.sklearn.log_model(
                     model_manager.model, 
                     "model",
-                    registered_model_name="logistic_regression_model"
+                    # registered_model_name="logistic_regression_model"
                 )
                 model_logged = True
+                logger.success("✅ Modèle loggué avec succès dans MLflow.")
             except Exception as e:
-                print(f"Erreur log model: {e}")
                 model_logged = False
-            
+                logger.error(f"❌ Échec du log du modèle: {e}")
+
             return RetrainResponse(
                 message="Modèle réentraîné avec succès",
                 train_accuracy=float(metrics["train_accuracy"]),
                 test_accuracy=float(metrics["test_accuracy"]),
                 mlflow_run_id=run.info.run_id
             )
-            
+
     except Exception as e:
-        # Fallback sans MLflow si problème de connexion
-        print(f"Erreur MLflow: {e}, fallback sans tracking")
+        logger.exception("❌ Erreur MLflow — fallback sans tracking.")
         metrics = model_manager.train_model(X.values, y.values)
-        
+        TRAIN_ACCURACY.set(float(metrics["train_accuracy"]))    
+        TEST_ACCURACY.set(float(metrics["test_accuracy"]))
+        DATASET_SIZE.set(len(X))
+
         return RetrainResponse(
             message="Modèle réentraîné (sans MLflow)",
             train_accuracy=float(metrics["train_accuracy"]),
@@ -202,6 +228,11 @@ def check_mlflow_status():
             "status": "error",
             "error": str(e)
         }
+
+@app.get("/metrics")
+def metrics():
+    logger.debug("📊 Serving /metrics endpoint")
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 if __name__ == "__main__":
     import uvicorn
