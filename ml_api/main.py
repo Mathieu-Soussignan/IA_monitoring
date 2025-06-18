@@ -8,8 +8,10 @@ import os
 
 from database import DatasetManager
 from ml_models import MLModelManager
+from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI(title="ML API - Jour 2", version="2.0.0")
+Instrumentator().instrument(app).expose(app)
 
 # Instances globales
 dataset_manager = DatasetManager()

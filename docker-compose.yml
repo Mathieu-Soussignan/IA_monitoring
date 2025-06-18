@@ -2,10 +2,8 @@ services:
   fastapi_app:
     build: ./app
     container_name: fastapi-app
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
+    ports: ["8000:8000"]
+    env_file: [.env]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -13,28 +11,22 @@ services:
       retries: 3
       start_period: 30s
     restart: unless-stopped
-    networks:
-      - mlops-network
+    networks: [mlops-network]
 
   uptime-kuma:
     image: louislam/uptime-kuma:latest
     container_name: uptime-kuma
-    ports:
-      - "3001:3001"
-    volumes:
-      - ./data/uptime-kuma:/app/data
+    ports: ["3001:3001"]
+    volumes: ["./data/uptime-kuma:/app/data"]
     restart: unless-stopped
-    networks:
-      - mlops-network
+    networks: [mlops-network]
 
   prefect:
     image: prefecthq/prefect:3-python3.12
     container_name: prefect-server
     command: prefect server start --host 0.0.0.0
-    ports:
-      - "4200:4200"
-    env_file:
-      - .env
+    ports: ["4200:4200"]
+    env_file: [.env]
     volumes:
       - ./flows:/opt/prefect/flows
       - ./data/prefect:/root/.prefect
@@ -48,36 +40,29 @@ services:
       retries: 3
       start_period: 45s
     restart: unless-stopped
-    networks:
-      - mlops-network
-    labels:
-      - "discord-logger.enabled=true"
+    labels: ["discord-logger.enabled=true"]
+    networks: [mlops-network]
 
   prefect-worker:
     image: prefecthq/prefect:3-python3.12
     container_name: prefect-worker
     command: >
       prefect worker start --pool default-pool --name ml-worker-docker
-    env_file:
-      - .env
+    env_file: [.env]
     environment:
       - PREFECT_API_URL=http://prefect-server:4200/api
-    volumes:
-      - ./flows:/opt/prefect/flows
+    volumes: ["./flows:/opt/prefect/flows"]
     depends_on:
       prefect:
         condition: service_started
     restart: unless-stopped
-    labels:
-      - "discord-logger.enabled=true"
-    networks:
-      - mlops-network
+    labels: ["discord-logger.enabled=true"]
+    networks: [mlops-network]
 
   ml-api:
     build: ./ml_api
     container_name: ml-api
-    ports:
-      - "8001:8001"
+    ports: ["8001:8001"]
     environment:
       - MLFLOW_TRACKING_URI=http://mlflow-server:5555
     volumes:
@@ -93,16 +78,13 @@ services:
       retries: 3
       start_period: 30s
     restart: unless-stopped
-    networks:
-      - mlops-network
-    labels:
-      - "discord-logger.enabled=true"
+    labels: ["discord-logger.enabled=true"]
+    networks: [mlops-network]
 
   mlflow:
-    image: python:3.11-slim                # ← laisse comme ça ou remplace par build: ./mlflow
+    image: python:3.11-slim
     container_name: mlflow-server
-    ports:
-      - "5555:5555"
+    ports: ["5555:5555"]
     working_dir: /mlflow
     command: >
       bash -c "
@@ -110,10 +92,11 @@ services:
         apt-get install -y build-essential procps curl &&
         pip install --upgrade pip setuptools wheel &&
         pip install mlflow[extras]==2.8.1 &&
-        mlflow server --host 0.0.0.0 --port 5555 --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns
+        mlflow server --host 0.0.0.0 --port 5555 \
+          --backend-store-uri sqlite:///mlflow.db \
+          --default-artifact-root ./mlruns
       "
-    volumes:
-      - ./data/mlflow:/mlflow
+    volumes: ["./data/mlflow:/mlflow"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5555"]
       interval: 30s
@@ -121,14 +104,12 @@ services:
       retries: 3
       start_period: 180s
     restart: unless-stopped
-    networks:
-      - mlops-network
+    networks: [mlops-network]
 
   docker-discord-logger:
     image: ghcr.io/1randomdev/docker-discord-logger:latest
     container_name: docker-discord-logger
-    env_file:
-      - .env
+    env_file: [.env]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
@@ -137,8 +118,36 @@ services:
       - FILTER_EXCLUDE_PATTERN=health|ping|GET|POST
       - RATE_LIMIT=true
     restart: unless-stopped
-    networks:
-      - mlops-network
+    networks: [mlops-network]
+
+  # ────────────────────────────────
+  #  Monitoring / Observability
+  # ────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports: ["9090:9090"]
+    restart: unless-stopped
+    networks: [mlops-network]
+
+  grafana:
+    image: grafana/grafana-oss:10.4.2
+    container_name: grafana
+    ports: ["3000:3000"]
+    volumes:
+      - ./monitoring/grafana-provisioning:/etc/grafana/provisioning
+    depends_on: [prometheus]
+    restart: unless-stopped
+    networks: [mlops-network]
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.1
+    container_name: node-exporter
+    ports: ["9100:9100"]     
+    restart: unless-stopped
+    networks: [mlops-network]
 
 networks:
   mlops-network:

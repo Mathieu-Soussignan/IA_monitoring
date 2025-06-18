@@ -1,0 +1,31 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  # FastAPI app principale
+  - job_name: fastapi_app
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['fastapi-app:8000']
+
+  # Service ml_api
+  - job_name: ml_api
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['ml-api:8001']
+
+  # Prefect 3
+  - job_name: prefect
+    metrics_path: /api/metrics
+    static_configs:
+      - targets: ['prefect-server:4200']
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ['prometheus:9090']
+
+  # Node-exporter (metrics machine)
+  - job_name: node
+    static_configs:
+      - targets: ['node-exporter:9100']
