@@ -15,17 +15,24 @@ scrape_configs:
     static_configs:
       - targets: ['ml-api:8001']
 
-  # Prefect 3
+  # Prefect 3 – serveur API
   - job_name: prefect
     metrics_path: /api/metrics
     static_configs:
       - targets: ['prefect-server:4200']
 
+  # Prefect worker (process pool)
+  - job_name: prefect_worker
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['prefect-worker:4200']
+
+  # Prometheus lui-même
   - job_name: prometheus
     static_configs:
       - targets: ['prometheus:9090']
 
-  # Node-exporter (metrics machine)
+  # Node-exporter (metrics système)
   - job_name: node
     static_configs:
       - targets: ['node-exporter:9100']
