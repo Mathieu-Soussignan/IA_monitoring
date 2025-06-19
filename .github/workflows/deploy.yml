@@ -1,0 +1,32 @@
+name: CI/CD Simulé – Déploiement Streamlit
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Cloner le dépôt
+        uses: actions/checkout@v3
+
+      - name: 🧪 Tester l'application
+        run: |
+          echo "✅ Tests fictifs ici"
+          echo "Par exemple : pytest ou lint"
+
+      - name: Simuler le build Docker
+        run: |
+          echo "docker-compose build"
+          echo "docker-compose up -d"
+          echo "Tout s'est bien passé 🎉"
+
+      - name: Simuler le déploiement via SSH
+        run: |
+          echo "Connexion à ${{ secrets.REMOTE_HOST }} (simulation)"
+          echo "Clé SSH utilisée (fake) : ${{ secrets.SSH_KEY_STG }}"
+          echo "Déploiement simulé terminé"
