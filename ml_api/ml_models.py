@@ -70,3 +70,25 @@ class MLModelManager:
         if self.model is None:
             raise ValueError("Aucun modèle entraîné")
         return self.model.predict(X)
+    
+    def compute_drift(self, threshold_data_size=200):
+        """
+        Détecte un drift en comparant la précision du modèle sur un nouveau dataset synthétique.
+        Plus la précision est basse, plus le drift est probable.
+        Cette version augmente volontairement le taux d'erreur pour simuler du drift.
+        """
+        if self.model is None:
+            raise ValueError("Modèle non chargé")
+
+        # Générer un dataset avec un léger shift simulé
+        X_new, y_true = self.generate_dataset(n_samples=threshold_data_size)
+
+        # Perturber artificiellement les features pour faire baisser la précision
+        X_new[:, 1] += np.random.normal(2, 0.5, size=threshold_data_size)
+
+        # Prédire avec le modèle actuel
+        y_pred = self.predict(X_new)
+
+        # Calcul du score de drift : 1 - précision
+        drift_score = 1.0 - accuracy_score(y_true, y_pred)
+        return drift_score

@@ -7,3 +7,4 @@ mlflow
 pytest
 prometheus-fastapi-instrumentator==6.1.0
 loguru
+prefect

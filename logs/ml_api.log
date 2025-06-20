@@ -16,3 +16,188 @@
 <h1>Not Found</h1>
 <p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
 '
+2025-06-19T12:54:19.978963+0000 | INFO | 🔁 Starting retraining process...
+2025-06-19T12:54:21.727943+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-19T12:54:22.092806+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-19T12:54:23.734251+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-19T13:04:21.165708+0000 | INFO | 🔁 Starting retraining process...
+2025-06-19T13:04:21.495604+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-19T13:04:21.592805+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-19T13:04:22.123344+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-19T13:07:02.754888+0000 | INFO | 🔁 Starting retraining process...
+2025-06-19T13:07:03.046692+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-19T13:07:03.146793+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-19T13:07:03.330328+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-20T12:20:09.950387+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T12:20:10.365913+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-20T12:20:11.312102+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T12:20:12.119278+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-20T12:24:55.218709+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T12:24:55.699083+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-20T12:24:56.136462+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T12:24:56.422146+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-20T13:06:00.760114+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:06:02.060360+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-20T13:06:02.427471+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:06:03.235260+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-20T13:08:00.237289+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:08:00.557415+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-20T13:08:00.823942+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:08:01.852315+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-20T13:10:00.882608+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:10:00.886193+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:10:01.424283+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-20T13:10:02.285362+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-20T13:10:02.502354+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:10:02.873389+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:10:03.637778+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-20T13:10:03.791973+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-20T13:12:02.659182+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:12:03.909235+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-20T13:12:06.148550+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:12:06.717809+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-20T13:14:00.283386+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:14:00.890407+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-20T13:14:02.089156+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:14:03.884288+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-20T13:16:00.486043+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:16:00.811451+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-20T13:16:00.894673+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:16:01.678896+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-20T13:18:00.013982+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:18:00.354224+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-20T13:18:00.499059+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:18:00.911644+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-20T13:20:02.321983+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:20:02.528449+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-20T13:20:02.726818+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:20:03.802685+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-20T13:20:08.515408+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:20:08.701021+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-20T13:20:08.751330+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:20:09.510498+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-20T13:23:07.526993+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:23:13.931053+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-20T13:23:25.243409+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:23:34.448025+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-20T13:24:02.029979+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:24:02.916303+0000 | INFO | 📁 Utilisation de l'expériment existant: ml-api-retraining
+2025-06-20T13:24:03.249198+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:24:04.002131+0000 | ERROR | ❌ Échec du log du modèle: API request to endpoint /api/2.0/mlflow/logged-models failed with error code 404 != 200. Response body: '<!doctype html>
+<html lang=en>
+<title>404 Not Found</title>
+<h1>Not Found</h1>
+<p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>
+'
+2025-06-20T13:31:19.892095+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:31:20.134724+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:31:33.549768+0000 | INFO | 📁 Expérience existante utilisée : ml-api-retraining
+2025-06-20T13:31:34.034679+0000 | INFO | 📁 Expérience existante utilisée : ml-api-retraining
+2025-06-20T13:31:35.509115+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:31:36.260809+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:31:38.116347+0000 | WARNING | ⚠️ Modèle entraîné mais non loggué dans MLflow (modèle visible uniquement localement)
+2025-06-20T13:31:38.361730+0000 | WARNING | ⚠️ Modèle entraîné mais non loggué dans MLflow (modèle visible uniquement localement)
+2025-06-20T13:48:00.469392+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:48:00.863332+0000 | INFO | 📁 Expérience existante utilisée : ml-api-retraining
+2025-06-20T13:48:01.111978+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:48:01.443673+0000 | WARNING | ⚠️ Modèle entraîné mais non loggué dans MLflow (modèle visible uniquement localement)
+2025-06-20T13:50:00.288896+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:50:00.499221+0000 | INFO | 📁 Expérience existante utilisée : ml-api-retraining
+2025-06-20T13:50:00.638646+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:50:01.356421+0000 | WARNING | ⚠️ Modèle entraîné mais non loggué dans MLflow (modèle visible uniquement localement)
+2025-06-20T13:52:00.698853+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:52:00.911234+0000 | INFO | 📁 Expérience existante utilisée : ml-api-retraining
+2025-06-20T13:52:01.129943+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:52:01.643360+0000 | WARNING | ⚠️ Modèle entraîné mais non loggué dans MLflow (modèle visible uniquement localement)
+2025-06-20T13:56:02.026085+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T13:56:02.231048+0000 | INFO | 📁 Expérience existante utilisée : ml-api-retraining
+2025-06-20T13:56:02.279825+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T13:56:02.887870+0000 | WARNING | ⚠️ Modèle entraîné mais non loggué dans MLflow (modèle visible uniquement localement)
+2025-06-20T14:00:00.511086+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T14:00:00.716654+0000 | INFO | 📁 Expérience existante utilisée : ml-api-retraining
+2025-06-20T14:00:00.835958+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T14:00:01.418798+0000 | WARNING | ⚠️ Modèle entraîné mais non loggué dans MLflow (modèle visible uniquement localement)
+2025-06-20T14:02:04.254751+0000 | INFO | 🔁 Starting retraining process...
+2025-06-20T14:02:05.198110+0000 | INFO | 📁 Expérience existante utilisée : ml-api-retraining
+2025-06-20T14:02:07.948127+0000 | INFO | 🛠️ Début du run MLflow
+2025-06-20T14:02:09.887753+0000 | WARNING | ⚠️ Modèle entraîné mais non loggué dans MLflow (modèle visible uniquement localement)

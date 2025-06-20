@@ -148,12 +148,17 @@ def retrain_model():
 
     try:
         exp_name = "ml-api-retraining"
+
         try:
             mlflow.create_experiment(exp_name)
-            logger.info(f"🧪 Création de l'expériment: {exp_name}")
+            logger.info(f"🧪 Expérience créée : {exp_name}")
         except Exception:
             exp = mlflow.get_experiment_by_name(exp_name)
-            logger.info(f"📁 Utilisation de l'expériment existant: {exp_name}")
+            if exp is not None:
+                logger.info(f"📁 Expérience existante utilisée : {exp_name}")
+            else:
+                logger.error(f"❌ Expérience introuvable : {exp_name}")
+                raise RuntimeError("Impossible de récupérer ou créer l'expérience MLflow")
 
         mlflow.set_experiment(exp_name)
 
@@ -161,10 +166,12 @@ def retrain_model():
             logger.info("🛠️ Début du run MLflow")
             metrics = model_manager.train_model(X.values, y.values)
 
+            # Prometheus
             TRAIN_ACCURACY.set(metrics["train_accuracy"])
             TEST_ACCURACY.set(metrics["test_accuracy"])
             DATASET_SIZE.set(len(X))
 
+            # Log params & metrics
             mlflow.log_params({
                 "n_samples": len(X),
                 "n_features": X.shape[1],
@@ -177,9 +184,9 @@ def retrain_model():
 
             try:
                 mlflow.sklearn.log_model(model_manager.model, "model")
-                logger.success("✅ Modèle loggué avec succès")
-            except Exception as err:
-                logger.error(f"❌ Échec du log du modèle: {err}")
+                logger.success("✅ Modèle loggué dans MLflow")
+            except Exception:
+                logger.warning("⚠️ Modèle entraîné mais non loggué dans MLflow (modèle visible uniquement localement)")
 
             return RetrainResponse(
                 message="Modèle réentraîné avec succès",
@@ -189,7 +196,8 @@ def retrain_model():
             )
 
     except Exception:
-        logger.exception("❌ Erreur MLflow, fallback sans tracking")
+        logger.exception("❌ Erreur lors du tracking MLflow, fallback sans logging")
+
         metrics = model_manager.train_model(X.values, y.values)
         TRAIN_ACCURACY.set(metrics["train_accuracy"])
         TEST_ACCURACY.set(metrics["test_accuracy"])
@@ -201,6 +209,11 @@ def retrain_model():
             test_accuracy=metrics["test_accuracy"],
             mlflow_run_id="mlflow_error"
         )
+
+@app.get("/drift")
+def drift_check():
+    score = model_manager.compute_drift()
+    return {"drift_score": score}
 
 # MLflow status
 @app.get("/mlflow-status")

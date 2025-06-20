@@ -26,8 +26,8 @@ CFG_PATH = Path(__file__).with_name("_cred.json")
 if not CFG_PATH.exists():
     user = os.getenv("UI_USER", "admin")
     pwd  = os.getenv("UI_PWD",  "admin")
-    hashed = stauth.Hasher([pwd]).generate()[0]      # API 0.3.3
-    creds = {                                        # ← top-level 'usernames'
+    hashed = stauth.Hasher([pwd]).generate()[0]
+    creds = {
         "usernames": {
             user: {
                 "email": f"{user}@example.com",
@@ -41,7 +41,7 @@ else:
     creds = json.loads(CFG_PATH.read_text())
 
 auth = stauth.Authenticate(
-    creds,                  
+    creds,
     "mlops_ui",
     "abcdef",
     cookie_expiry_days=1,
@@ -53,10 +53,13 @@ if not auth_status:
 # ──────────────────────────────────────────────────────────────────────────────
 # 3. Globals & sidebar
 # ──────────────────────────────────────────────────────────────────────────────
-API_ML   = st.sidebar.text_input(
+API_ML = st.sidebar.text_input(
     "ML-API URL", value=os.getenv("ML_API_URL", "http://ml-api:8001")
 )
 API_FAST = os.getenv("FAST_API_URL", "http://fastapi-app:8000")
+API_PREFECT = st.sidebar.text_input(
+    "Prefect API URL", value=os.getenv("PREFECT_API_URL", "http://prefect:4200/api")
+)
 API_TOKEN = st.sidebar.text_input("Bearer token", value=os.getenv("API_TOKEN", ""))
 HEADERS = {"Authorization": f"Bearer {API_TOKEN}"} if API_TOKEN else {}
 
@@ -100,10 +103,20 @@ with tab_pred:
             st.error(data)
 
 with tab_train:
-    st.subheader("♻️ Retrain model")
+    st.subheader("♻️ Retrain model (direct ML-API)")
     if st.button("Retrain"):
         ok, data = call_api("POST", f"{API_ML}/retrain")
         st.json(data if ok else {"error": data})
+
+    st.subheader("📦 Trigger Prefect flow")
+    if st.button("Trigger Prefect flow"):
+        endpoint = f"{API_PREFECT}/deployments/name/continuous-retrain/default/create_flow_run"
+        ok, data = call_api("POST", endpoint)
+        if ok:
+            st.success("✅ Flow triggered!")
+            st.json(data)
+        else:
+            st.error(f"❌ Failed to trigger flow: {data}")
 
 with tab_health:
     st.subheader("🚦 Service health checks")

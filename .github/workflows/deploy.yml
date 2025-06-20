@@ -23,7 +23,7 @@ jobs:
         run: |
           echo "docker-compose build"
           echo "docker-compose up -d"
-          echo "Tout s'est bien passé 🎉"
+          echo "Tout s'est bien passé"
 
       - name: Simuler le déploiement via SSH
         run: |

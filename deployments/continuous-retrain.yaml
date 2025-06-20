@@ -1,0 +1,17 @@
+name: hourly-retrain
+version: 1.0
+flow_name: continuous_retrain_flow
+entrypoint: flows/continuous_retrain.py:continuous_retrain_flow
+
+work_pool:
+  name: default-pool
+  work_queue_name: default
+  job_variables:
+    env:
+      ML_API_URL: http://ml-api:8001
+      DRIFT_THRESHOLD: 0.3
+
+schedule:
+  type: cron
+  cron: "*/10 * * * *"
+  timezone: Europe/Paris

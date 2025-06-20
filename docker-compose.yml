@@ -5,7 +5,6 @@ services:
     ports: ["8000:8000"]
     env_file: [.env]
     healthcheck:
-      # test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
       timeout: 10s
@@ -22,24 +21,28 @@ services:
     restart: unless-stopped
     networks: [mlops-network]
 
+  # ─────────────────────────────────────────────────────
+  # Prefect Server + Agent
+  # ─────────────────────────────────────────────────────
   prefect:
     image: prefecthq/prefect:3-python3.12
     container_name: prefect-server
     command: prefect server start --host 0.0.0.0
     ports: ["4200:4200"]
     env_file: [.env]
-    volumes:
-      - ./flows:/opt/prefect/flows
-      - ./data/prefect:/root/.prefect
     environment:
       - PREFECT_HOME=/root/.prefect
       - PREFECT_API_DATABASE_CONNECTION_URL=sqlite+aiosqlite:////root/.prefect/prefect.db
+      - PREFECT_UI_API_URL=http://localhost:4200/api
+    volumes:
+      - ./flows:/opt/prefect/flows
+      - ./deployments:/opt/prefect/deployments
+      - ./data/prefect:/root/.prefect
     healthcheck:
-      # test: ["CMD", "curl", "-f", "http://localhost:4200/api/health"]
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4200/api/health')"]
       interval: 30s
-      timeout: 60s
-      retries: 3
+      timeout: 30s
+      retries: 5
       start_period: 45s
     restart: unless-stopped
     labels: ["discord-logger.enabled=true"]
@@ -49,29 +52,38 @@ services:
     image: prefecthq/prefect:3-python3.12
     container_name: prefect-worker
     command: >
-      prefect worker start --pool default-pool --name ml-worker-docker
+      bash -c "
+        sleep 10 &&
+        prefect work-pool create --type process default-pool --overwrite &&
+        prefect worker start --pool default-pool
+      "
     env_file: [.env]
     environment:
       - PREFECT_API_URL=http://prefect-server:4200/api
-    volumes: ["./flows:/opt/prefect/flows"]
+    volumes:
+      - ./flows:/opt/prefect/flows
+      - ./deployments:/opt/prefect/deployments
     depends_on:
       prefect:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
     labels: ["discord-logger.enabled=true"]
     networks: [mlops-network]
-
+  # ─────────────────────────────────────────────────────
+  # API ML + MLflow
+  # ─────────────────────────────────────────────────────
   ml-api:
     build: ./ml_api
     container_name: ml-api
     ports: ["8001:8001"]
+    env_file: [.env]
     environment:
       - MLFLOW_TRACKING_URI=http://mlflow-server:5555
       - API_TOKEN=${API_TOKEN}
     volumes:
       - ./ml_api/models:/app/models
       - ./data/ml-api:/app/data
-      - ./logs:/app/logs 
+      - ./logs:/app/logs
     depends_on:
       mlflow:
         condition: service_healthy
@@ -90,11 +102,11 @@ services:
     container_name: mlflow-server
     ports: ["5555:5555"]
     working_dir: /mlflow
-    command: mlflow server --host 0.0.0.0 --port 5555 --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns
-    volumes: ["./data/mlflow:/mlflow"]
+    command: >
+      mlflow server --host 0.0.0.0 --port 5555 --backend-store-uri sqlite:///mlflow.db --default-artifact-root ./mlruns
+    volumes:
+      - ./data/mlflow:/mlflow
     healthcheck:
-      # test: ["CMD", "curl", "-f", "http://localhost:5555"]
-      # teste simplement que localhost:5555 répond en HTTP 200 via Python
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5555')"]
       interval: 30s
       timeout: 10s
@@ -103,6 +115,9 @@ services:
     restart: unless-stopped
     networks: [mlops-network]
 
+  # ─────────────────────────────────────────────────────
+  # Logging externe Docker → Discord
+  # ─────────────────────────────────────────────────────
   docker-discord-logger:
     image: ghcr.io/1randomdev/docker-discord-logger:latest
     container_name: docker-discord-logger
@@ -117,9 +132,9 @@ services:
     restart: unless-stopped
     networks: [mlops-network]
 
-  # ────────────────────────────────
-  #  Monitoring / Observability
-  # ────────────────────────────────
+  # ─────────────────────────────────────────────────────
+  # Monitoring / Observabilité
+  # ─────────────────────────────────────────────────────
   prometheus:
     image: prom/prometheus:v2.52.0
     container_name: prometheus
@@ -135,21 +150,22 @@ services:
     ports: ["3000:3000"]
     volumes:
       - ./monitoring/grafana-provisioning:/etc/grafana/provisioning
-    depends_on: [prometheus]
+    depends_on:
+      - prometheus
     restart: unless-stopped
     networks: [mlops-network]
 
   node-exporter:
     image: prom/node-exporter:v1.8.1
     container_name: node-exporter
-    ports: ["9100:9100"]     
+    ports: ["9100:9100"]
     restart: unless-stopped
     networks: [mlops-network]
-  
+
   ui:
     build: ./ui
     container_name: streamlit-ui
-    env_file: .env
+    env_file: [.env]
     ports: ["8501:8501"]
     networks: [mlops-network]
 
